@@ -22,12 +22,23 @@ def create_app():
     # Add security middleware
     app.add_middleware(SecurityHeadersMiddleware)
     
-    # Add CORS middleware
+    # Configure CORS for production
+    allowed_origins = [
+        "http://localhost:3000",
+        "http://localhost:3001", 
+        "https://your-frontend-domain.vercel.app",  # Update with your Vercel domain
+        "https://*.vercel.app",  # Allow all Vercel preview deployments
+    ]
+    
+    # In development, allow all origins
+    if os.getenv("ENVIRONMENT") == "development":
+        allowed_origins = ["*"]
+    
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # In production, restrict this to specific origins
+        allow_origins=allowed_origins,
         allow_credentials=True,
-        allow_methods=["*"],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
         allow_headers=["*"],
     )
     
