@@ -52,10 +52,25 @@
     },
     build: {
       target: 'esnext',
-      outDir: 'build',
+      outDir: 'dist',
+      sourcemap: false,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom'],
+            ui: ['lucide-react', '@radix-ui/react-slot']
+          }
+        }
+      }
     },
     server: {
       port: 3000,
       open: true,
+    },
+    preview: {
+      port: 4173,
+    },
+    define: {
+      'process.env': {}
     },
   });

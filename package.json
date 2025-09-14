@@ -54,6 +54,10 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "preview": "vite preview",
+    "build:production": "NODE_ENV=production vite build",
+    "start": "vite preview --port 4173",
+    "type-check": "tsc --noEmit"
   }
 }
