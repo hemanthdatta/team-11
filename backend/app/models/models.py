@@ -12,6 +12,12 @@ class User(Base):
     phone = Column(String, unique=True, index=True)
     user_id = Column(String, unique=True, index=True)
     password_hash = Column(String)
+    business_name = Column(String)
+    business_type = Column(String)
+    location = Column(String)
+    bio = Column(String)
+    profile_image = Column(String)
+    website = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
@@ -59,3 +65,33 @@ class Interaction(Base):
     message = Column(String)
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
     sent_by = Column(String)  # user_id or system
+
+class CustomerInteraction(Base):
+    __tablename__ = "customer_interactions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    customer_id = Column(Integer, ForeignKey("customers.id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
+    
+    # Type of interaction (call, meeting, email, whatsapp, sms, etc.)
+    interaction_type = Column(String, index=True)
+    
+    # When the interaction occurred
+    interaction_date = Column(DateTime(timezone=True), index=True)
+    
+    # Summary/title of the interaction
+    title = Column(String)
+    
+    # Detailed notes about the interaction
+    notes = Column(String)
+    
+    # Any follow-up actions required
+    follow_up_needed = Column(Boolean, default=False)
+    follow_up_date = Column(DateTime(timezone=True), nullable=True)
+    
+    # Status of the interaction (pending, completed, follow-up required)
+    status = Column(String, default="completed")
+    
+    # Created and updated timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())

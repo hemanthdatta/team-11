@@ -12,6 +12,11 @@ interface SignupData {
   phone?: string;
   user_id: string;
   password: string;
+  business_name?: string;
+  business_type?: string;
+  location?: string;
+  bio?: string;
+  website?: string;
 }
 
 interface CustomerData {
@@ -56,6 +61,93 @@ class ApiService {
     }
     const result = await response.json();
     console.log('API: Interactions fetch successful, response:', result);
+    return result;
+  }
+  
+  async getCustomerDetailedInteractions(customer_id: number, user_id: number) {
+    console.log('API: Fetching detailed interactions for customer', customer_id);
+    const response = await fetch(`${API_BASE_URL}/interactions/?customer_id=${customer_id}&user_id=${user_id}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API: Detailed interactions fetch failed with error:', errorText);
+      throw new Error(`Failed to fetch detailed interactions: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+    const result = await response.json();
+    console.log('API: Detailed interactions fetch successful, response:', result);
+    return result;
+  }
+  
+  async createCustomerInteraction(data: any) {
+    console.log('API: Creating customer interaction', data);
+    const response = await fetch(`${API_BASE_URL}/interactions/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API: Interaction creation failed with error:', errorText);
+      throw new Error(`Failed to create interaction: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+    
+    const result = await response.json();
+    console.log('API: Interaction creation successful, response:', result);
+    return result;
+  }
+  
+  async updateCustomerInteraction(interaction_id: number, data: any) {
+    console.log('API: Updating customer interaction', interaction_id, data);
+    const response = await fetch(`${API_BASE_URL}/interactions/${interaction_id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API: Interaction update failed with error:', errorText);
+      throw new Error(`Failed to update interaction: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+    
+    const result = await response.json();
+    console.log('API: Interaction update successful, response:', result);
+    return result;
+  }
+  
+  async deleteCustomerInteraction(interaction_id: number) {
+    console.log('API: Deleting customer interaction', interaction_id);
+    const response = await fetch(`${API_BASE_URL}/interactions/${interaction_id}`, {
+      method: 'DELETE',
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API: Interaction deletion failed with error:', errorText);
+      throw new Error(`Failed to delete interaction: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+    
+    const result = await response.json();
+    console.log('API: Interaction deletion successful, response:', result);
+    return result;
+  }
+  
+  async getUpcomingFollowups(user_id: number, days: number = 7) {
+    console.log('API: Fetching upcoming followups for user', user_id);
+    const response = await fetch(`${API_BASE_URL}/interactions/upcoming-followups?user_id=${user_id}&days=${days}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API: Followups fetch failed with error:', errorText);
+      throw new Error(`Failed to fetch followups: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+    
+    const result = await response.json();
+    console.log('API: Followups fetch successful, response:', result);
     return result;
   }
 
@@ -138,6 +230,60 @@ class ApiService {
     
     const result = await response.json();
     console.log('API: Profile fetch successful, response:', result);
+    return result;
+  }
+
+  async updateProfile(user_id: string, profileData: any) {
+    console.log('API: Updating profile for user', user_id, 'with data', profileData);
+    const response = await fetch(`${API_BASE_URL}/auth/profile?current_user_id=${user_id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(profileData),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API: Profile update failed with error:', errorText);
+      throw new Error(`Failed to update profile: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+    
+    const result = await response.json();
+    console.log('API: Profile update successful, response:', result);
+    return result;
+  }
+
+  async uploadProfileImage(user_id: string, formData: FormData) {
+    console.log('API: Uploading profile image for user', user_id);
+    const response = await fetch(`${API_BASE_URL}/auth/profile/upload-image?current_user_id=${user_id}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API: Image upload failed with error:', errorText);
+      throw new Error(`Failed to upload image: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+    
+    const result = await response.json();
+    console.log('API: Image upload successful, response:', result);
+    return result;
+  }
+
+  async getBusinessTypes() {
+    console.log('API: Fetching business types');
+    const response = await fetch(`${API_BASE_URL}/auth/business-types`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API: Business types fetch failed with error:', errorText);
+      throw new Error(`Failed to fetch business types: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+    
+    const result = await response.json();
+    console.log('API: Business types fetch successful, response:', result);
     return result;
   }
 
@@ -451,6 +597,118 @@ class ApiService {
     
     const result = await response.json();
     console.log('API: Image generation successful, response:', result);
+    return result;
+  }
+
+  // Digital Presence endpoints
+  async getWebsiteInfo(user_id: number) {
+    console.log('API: Fetching website info for user', user_id);
+    const response = await fetch(`${API_BASE_URL}/digital-presence/website/${user_id}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API: Website info fetch failed with error:', errorText);
+      throw new Error(`Failed to fetch website info: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+    
+    const result = await response.json();
+    console.log('API: Website info fetch successful, response:', result);
+    return result;
+  }
+
+  async getWebsiteTemplates() {
+    console.log('API: Fetching website templates');
+    const response = await fetch(`${API_BASE_URL}/digital-presence/templates`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API: Website templates fetch failed with error:', errorText);
+      throw new Error(`Failed to fetch website templates: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+    
+    const result = await response.json();
+    console.log('API: Website templates fetch successful, response:', result);
+    return result;
+  }
+
+  async applyWebsiteTemplate(user_id: number, template_id: string) {
+    console.log('API: Applying website template', user_id, template_id);
+    const response = await fetch(`${API_BASE_URL}/digital-presence/website/${user_id}/template`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ template_id }),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API: Template application failed with error:', errorText);
+      throw new Error(`Failed to apply template: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+    
+    const result = await response.json();
+    console.log('API: Template application successful, response:', result);
+    return result;
+  }
+
+  async generateWebsiteHtml(user_id: number, template_id: string) {
+    console.log('API: Generating website HTML', user_id, template_id);
+    const response = await fetch(`${API_BASE_URL}/digital-presence/website/${user_id}/generate/${template_id}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API: Website HTML generation failed with error:', errorText);
+      throw new Error(`Failed to generate website HTML: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+    
+    const result = await response.json();
+    console.log('API: Website HTML generation successful, response:', result);
+    return result;
+  }
+
+  async previewWebsite(user_id: number, template_id: string): Promise<string> {
+    console.log('API: Fetching website preview', user_id, template_id);
+    const response = await fetch(`${API_BASE_URL}/digital-presence/website/${user_id}/preview/${template_id}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API: Website preview failed with error:', errorText);
+      throw new Error(`Failed to fetch website preview: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+    
+    const htmlContent = await response.text();
+    console.log('API: Website preview fetch successful');
+    return htmlContent;
+  }
+
+  async getSocialProfiles(user_id: number) {
+    console.log('API: Fetching social profiles for user', user_id);
+    const response = await fetch(`${API_BASE_URL}/digital-presence/social-profiles/${user_id}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API: Social profiles fetch failed with error:', errorText);
+      throw new Error(`Failed to fetch social profiles: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+    
+    const result = await response.json();
+    console.log('API: Social profiles fetch successful, response:', result);
+    return result;
+  }
+
+  async getDigitalPresenceAnalytics(user_id: number) {
+    console.log('API: Fetching digital presence analytics for user', user_id);
+    const response = await fetch(`${API_BASE_URL}/digital-presence/analytics/${user_id}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API: Digital presence analytics fetch failed with error:', errorText);
+      throw new Error(`Failed to fetch digital presence analytics: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+    
+    const result = await response.json();
+    console.log('API: Digital presence analytics fetch successful, response:', result);
     return result;
   }
 }

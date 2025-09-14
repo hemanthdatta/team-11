@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
 import { Facebook, Instagram, MessageCircle, ArrowRight, Loader2 } from 'lucide-react';
 import { apiService } from '../services/api';
@@ -17,7 +18,11 @@ export function ProfileSetupScreen({ onComplete }: ProfileSetupScreenProps) {
     email: '',
     userId: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    businessName: '',
+    businessType: '',
+    location: '',
+    bio: ''
   });
 
   const [connectedAccounts, setConnectedAccounts] = useState({
@@ -71,7 +76,11 @@ export function ProfileSetupScreen({ onComplete }: ProfileSetupScreenProps) {
         phone: formData.phone,
         email: formData.email,
         user_id: formData.userId,
-        password: formData.password
+        password: formData.password,
+        business_name: formData.businessName,
+        business_type: formData.businessType,
+        location: formData.location,
+        bio: formData.bio
       });
       
       console.log('Signup successful, response:', response);
@@ -176,6 +185,53 @@ export function ProfileSetupScreen({ onComplete }: ProfileSetupScreenProps) {
                   required
                   disabled={loading}
                 />
+              </div>
+              
+              <div className="mt-4 border-t pt-4">
+                <h3 className="text-base font-medium mb-3">Business Information</h3>
+                <div>
+                  <Label htmlFor="businessName">Business Name</Label>
+                  <Input
+                    id="businessName"
+                    value={formData.businessName}
+                    onChange={(e) => handleInputChange('businessName', e.target.value)}
+                    placeholder="Your business name"
+                    disabled={loading}
+                  />
+                </div>
+                
+                <div className="mt-2">
+                  <Label htmlFor="businessType">Business Type</Label>
+                  <Input
+                    id="businessType"
+                    value={formData.businessType}
+                    onChange={(e) => handleInputChange('businessType', e.target.value)}
+                    placeholder="e.g., Retail, Service, Consulting"
+                    disabled={loading}
+                  />
+                </div>
+                
+                <div className="mt-2">
+                  <Label htmlFor="location">Location</Label>
+                  <Input
+                    id="location"
+                    value={formData.location}
+                    onChange={(e) => handleInputChange('location', e.target.value)}
+                    placeholder="Your city or area"
+                    disabled={loading}
+                  />
+                </div>
+                
+                <div className="mt-2">
+                  <Label htmlFor="bio">Brief Introduction</Label>
+                  <Textarea
+                    id="bio"
+                    value={formData.bio}
+                    onChange={(e) => handleInputChange('bio', e.target.value)}
+                    placeholder="A brief introduction about you and your business"
+                    disabled={loading}
+                  />
+                </div>
               </div>
               
               {error && <p className="text-sm text-red-500">{error}</p>}

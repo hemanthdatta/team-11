@@ -24,8 +24,21 @@ export function LoginScreen({ onLogin, onSignup }: LoginScreenProps) {
     
     try {
       const response = await apiService.login({ user_id: userId, password });
-      // Store the token in localStorage or context
+      
+      // Store both the token and user data in localStorage
       localStorage.setItem('authToken', response.access_token);
+      localStorage.setItem('user', JSON.stringify({
+        id: response.id,
+        user_id: response.user_id,
+        name: response.name
+      }));
+      
+      console.log('Login successful, stored user data:', {
+        id: response.id,
+        user_id: response.user_id,
+        name: response.name
+      });
+      
       onLogin(userId);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Invalid credentials. Please try again.';

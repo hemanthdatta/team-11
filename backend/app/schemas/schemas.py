@@ -8,15 +8,32 @@ class UserBase(BaseModel):
     email: Optional[str] = None
     phone: Optional[str] = None
     user_id: str
+    business_name: Optional[str] = None
+    business_type: Optional[str] = None
+    location: Optional[str] = None
+    bio: Optional[str] = None
+    website: Optional[str] = None
 
 class UserCreate(UserBase):
     password: str
 
 class UserUpdate(UserBase):
-    pass
+    password: Optional[str] = None
+
+class UserProfileUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    business_name: Optional[str] = None
+    business_type: Optional[str] = None
+    location: Optional[str] = None
+    bio: Optional[str] = None
+    profile_image: Optional[str] = None
+    website: Optional[str] = None
 
 class User(UserBase):
     id: int
+    profile_image: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
     
@@ -94,6 +111,39 @@ class InteractionUpdate(InteractionBase):
 class Interaction(InteractionBase):
     id: int
     timestamp: datetime
+    
+    class Config:
+        from_attributes = True
+
+# Customer Interaction schemas
+class CustomerInteractionBase(BaseModel):
+    interaction_type: str
+    interaction_date: datetime
+    title: str
+    notes: str
+    follow_up_needed: bool = False
+    follow_up_date: Optional[datetime] = None
+    status: str = "completed"
+
+class CustomerInteractionCreate(CustomerInteractionBase):
+    customer_id: int
+    user_id: int
+
+class CustomerInteractionUpdate(CustomerInteractionBase):
+    interaction_type: Optional[str] = None
+    interaction_date: Optional[datetime] = None
+    title: Optional[str] = None
+    notes: Optional[str] = None
+    follow_up_needed: Optional[bool] = None
+    follow_up_date: Optional[datetime] = None
+    status: Optional[str] = None
+
+class CustomerInteraction(CustomerInteractionBase):
+    id: int
+    customer_id: int
+    user_id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
     
     class Config:
         from_attributes = True

@@ -1,12 +1,147 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Globe, Eye, Smartphone, Share2, Edit, Layout, Star } from 'lucide-react';
+import { Globe, Eye, Smartphone, Share2, Edit, Layout, Star, Loader2, RefreshCw } from 'lucide-react';
+import { apiService } from '../services/api';
 
 export function DigitalPresenceBuilder() {
   const [selectedTemplate, setSelectedTemplate] = useState('professional');
+  const [websiteInfo, setWebsiteInfo] = useState<any>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [previewHtml, setPreviewHtml] = useState<string>('');
+  const [error, setError] = useState<string>('');
+
+  // Load website info on mount
+  useEffect(() => {
+    loadWebsiteInfo();
+  }, []);
+
+  const loadWebsiteInfo = async () => {
+    try {
+      setIsLoading(true);
+      setError('');
+      
+      const userStr = localStorage.getItem('user');
+      console.log('Raw user data from localStorage:', userStr);
+      
+      if (!userStr) {
+        setError('No user data found. Please log in again.');
+        setIsLoading(false);
+        return;
+      }
+      
+      const user = JSON.parse(userStr);
+      console.log('Parsed user data:', user);
+      
+      if (!user.id) {
+        setError('Invalid user data. Please log in again.');
+        setIsLoading(false);
+        return;
+      }
+      
+      const info = await apiService.getWebsiteInfo(user.id);
+      setWebsiteInfo(info);
+    } catch (err) {
+      console.error('Error loading website info:', err);
+      setError('Failed to load website information: ' + (err instanceof Error ? err.message : 'Unknown error'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGenerateWebsite = async () => {
+    try {
+      setIsGenerating(true);
+      setError('');
+      
+      const userStr = localStorage.getItem('user');
+      if (!userStr) {
+        setError('No user data found. Please log in again.');
+        return;
+      }
+      
+      const user = JSON.parse(userStr);
+      if (!user.id) {
+        setError('Invalid user data. Please log in again.');
+        return;
+      }
+
+      console.log('Generating website for user:', user.id, 'template:', selectedTemplate);
+      const result = await apiService.generateWebsiteHtml(user.id, selectedTemplate);
+      
+      if (result.html_content) {
+        setPreviewHtml(result.html_content);
+        await loadWebsiteInfo(); // Refresh website info
+      }
+    } catch (err) {
+      console.error('Error generating website:', err);
+      setError('Failed to generate website: ' + (err instanceof Error ? err.message : 'Unknown error'));
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handlePreviewWebsite = async () => {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (!userStr) {
+        setError('No user data found. Please log in again.');
+        return;
+      }
+      
+      const user = JSON.parse(userStr);
+      if (!user.id) {
+        setError('Invalid user data. Please log in again.');
+        return;
+      }
+
+      console.log('Previewing website for user:', user.id, 'template:', selectedTemplate);
+      const html = await apiService.previewWebsite(user.id, selectedTemplate);
+      
+      if (html) {
+        // Open preview in new window
+        const newWindow = window.open('', '_blank');
+        if (newWindow) {
+          newWindow.document.write(html);
+          newWindow.document.close();
+        }
+      }
+    } catch (err) {
+      console.error('Error previewing website:', err);
+      setError('Failed to preview website: ' + (err instanceof Error ? err.message : 'Unknown error'));
+    }
+  };
+
+  const handleApplyTemplate = async () => {
+    try {
+      setIsGenerating(true);
+      setError('');
+      
+      const userStr = localStorage.getItem('user');
+      if (!userStr) {
+        setError('No user data found. Please log in again.');
+        return;
+      }
+      
+      const user = JSON.parse(userStr);
+      if (!user.id) {
+        setError('Invalid user data. Please log in again.');
+        return;
+      }
+
+      console.log('Applying template for user:', user.id, 'template:', selectedTemplate);
+      await apiService.applyWebsiteTemplate(user.id, selectedTemplate);
+      await loadWebsiteInfo(); // Refresh website info
+    } catch (err) {
+      console.error('Error applying template:', err);
+      setError('Failed to apply template: ' + (err instanceof Error ? err.message : 'Unknown error'));
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const templates = [
     {
@@ -87,39 +222,107 @@ export function DigitalPresenceBuilder() {
           </TabsList>
 
           <TabsContent value="website" className="space-y-4">
+            {/* Error Display */}
+            {error && (
+              <Card className="border-red-200 bg-red-50">
+                <CardContent className="p-4">
+                  <div className="text-red-800 text-sm">{error}</div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mt-2"
+                    onClick={() => setError('')}
+                  >
+                    Dismiss
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Loading State */}
+            {isLoading && (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
+                  <p className="text-muted-foreground">Loading website information...</p>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Current Website Status */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span className="flex items-center">
-                    <Globe className="h-5 w-5 mr-2" />
-                    Your Website
-                  </span>
-                  <Badge variant="outline">Live</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="bg-gray-100 rounded-lg p-4 text-center">
-                  <div className="text-4xl mb-2">🏢</div>
-                  <h3 className="font-medium">Rajesh Kumar - Insurance Agent</h3>
-                  <p className="text-sm text-muted-foreground">growthpro.app/rajesh-kumar</p>
-                </div>
-                
-                <div className="flex space-x-2">
-                  <Button size="sm" className="flex-1">
-                    <Eye className="h-4 w-4 mr-1" />
-                    Preview
-                  </Button>
-                  <Button size="sm" variant="outline" className="flex-1">
-                    <Edit className="h-4 w-4 mr-1" />
-                    Edit
-                  </Button>
-                  <Button size="sm" variant="outline">
-                    <Share2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            {!isLoading && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span className="flex items-center">
+                      <Globe className="h-5 w-5 mr-2" />
+                      Your Website
+                    </span>
+                    <div className="flex items-center space-x-2">
+                      <Badge variant="outline">
+                        {websiteInfo?.status || 'Not Created'}
+                      </Badge>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={loadWebsiteInfo}
+                        disabled={isLoading}
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="bg-gray-100 rounded-lg p-4 text-center">
+                    <div className="text-4xl mb-2">
+                      {websiteInfo?.template_id === 'professional' ? '🏢' : 
+                       websiteInfo?.template_id === 'modern' ? '✨' : '🎯'}
+                    </div>
+                    <h3 className="font-medium">
+                      {websiteInfo?.business_name || 'Your Business'}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {websiteInfo?.website_url || 'Website URL will be generated'}
+                    </p>
+                    {websiteInfo?.last_updated && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Last updated: {new Date(websiteInfo.last_updated).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div className="flex space-x-2">
+                    <Button 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={handlePreviewWebsite}
+                      disabled={!websiteInfo?.html_content}
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      Preview
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={handleGenerateWebsite}
+                      disabled={isGenerating}
+                    >
+                      {isGenerating ? (
+                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      ) : (
+                        <Edit className="h-4 w-4 mr-1" />
+                      )}
+                      {isGenerating ? 'Generating...' : 'Generate'}
+                    </Button>
+                    <Button size="sm" variant="outline" disabled>
+                      <Share2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Website Templates */}
             <Card>
@@ -161,8 +364,19 @@ export function DigitalPresenceBuilder() {
                   ))}
                 </div>
                 
-                <Button className="w-full mt-4">
-                  Apply Template
+                <Button 
+                  className="w-full mt-4"
+                  onClick={handleApplyTemplate}
+                  disabled={isGenerating}
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Applying Template...
+                    </>
+                  ) : (
+                    'Apply Template'
+                  )}
                 </Button>
               </CardContent>
             </Card>
@@ -170,34 +384,72 @@ export function DigitalPresenceBuilder() {
             {/* Mobile Preview */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Smartphone className="h-5 w-5 mr-2" />
-                  Mobile Preview
+                <CardTitle className="flex items-center justify-between">
+                  <span className="flex items-center">
+                    <Smartphone className="h-5 w-5 mr-2" />
+                    Mobile Preview
+                  </span>
+                  {previewHtml && (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => {
+                        const newWindow = window.open('', '_blank');
+                        if (newWindow) {
+                          newWindow.document.write(previewHtml);
+                          newWindow.document.close();
+                        }
+                      }}
+                    >
+                      <Eye className="h-3 w-3 mr-1" />
+                      Full Preview
+                    </Button>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="bg-gray-900 rounded-lg p-4 max-w-sm mx-auto">
                   <div className="bg-white rounded-lg p-4 space-y-3">
-                    <div className="text-center">
-                      <div className="w-16 h-16 bg-blue-100 rounded-full mx-auto mb-2 flex items-center justify-center">
-                        <span className="text-xl">👨‍💼</span>
-                      </div>
-                      <h3 className="font-medium">Rajesh Kumar</h3>
-                      <p className="text-xs text-muted-foreground">Insurance Advisor</p>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="h-2 bg-gray-200 rounded"></div>
-                      <div className="h-2 bg-gray-200 rounded w-3/4"></div>
-                      <div className="h-2 bg-gray-200 rounded w-1/2"></div>
-                    </div>
-                    
-                    <div className="flex space-x-2">
-                      <div className="h-8 bg-blue-500 rounded flex-1"></div>
-                      <div className="h-8 bg-gray-200 rounded flex-1"></div>
-                    </div>
+                    {previewHtml ? (
+                      <div 
+                        className="text-xs overflow-hidden h-40"
+                        dangerouslySetInnerHTML={{ 
+                          __html: previewHtml.substring(0, 200) + '...' 
+                        }}
+                      />
+                    ) : (
+                      <>
+                        <div className="text-center">
+                          <div className="w-16 h-16 bg-blue-100 rounded-full mx-auto mb-2 flex items-center justify-center">
+                            <span className="text-xl">👨‍💼</span>
+                          </div>
+                          <h3 className="font-medium">
+                            {websiteInfo?.business_name || 'Your Business'}
+                          </h3>
+                          <p className="text-xs text-muted-foreground">
+                            {websiteInfo?.business_type || 'Business Professional'}
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <div className="h-2 bg-gray-200 rounded"></div>
+                          <div className="h-2 bg-gray-200 rounded w-3/4"></div>
+                          <div className="h-2 bg-gray-200 rounded w-1/2"></div>
+                        </div>
+                        
+                        <div className="flex space-x-2">
+                          <div className="h-8 bg-blue-500 rounded flex-1"></div>
+                          <div className="h-8 bg-gray-200 rounded flex-1"></div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
+                {!websiteInfo?.html_content && (
+                  <p className="text-center text-sm text-muted-foreground mt-2">
+                    Generate your website to see the mobile preview
+                  </p>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

@@ -62,10 +62,24 @@ export function CustomersPage({ userId, onViewCustomer }: CustomersPageProps) {
 
   const handleCall = (customer: Customer) => {
     const info = (customer.contact_info || '').trim();
-    if (/^[\+]?[0-9][\d\s-]*$/.test(info)) {
-      window.location.href = `tel:${info.replace(/[\s-]/g, '')}`;
+    
+    // Extract phone number from contact_info (which might contain both email and phone)
+    const phoneMatch = info.match(/(\+?[\d\s-]{10,})/);
+    
+    if (phoneMatch && phoneMatch[0]) {
+      const phoneNumber = phoneMatch[0].trim();
+      window.location.href = `tel:${phoneNumber.replace(/[\s-]/g, '')}`;
     } else if (info.includes('@')) {
-      window.location.href = `mailto:${info}`;
+      // Create email with subject and body
+      const subject = `Following up - ${customer.name}`;
+      const body = `Dear ${customer.name},\n\nI hope this email finds you well.\n\nI'm reaching out to follow up on our previous conversation.\n\nBest regards,\n[Your Name]`;
+      
+      // URL encode subject and body
+      const encodedSubject = encodeURIComponent(subject);
+      const encodedBody = encodeURIComponent(body);
+      
+      // Open default email client with pre-filled fields
+      window.location.href = `mailto:${info}?subject=${encodedSubject}&body=${encodedBody}`;
     } else {
       navigator.clipboard.writeText(info).catch(() => {});
       alert('Contact copied to clipboard');
@@ -74,12 +88,95 @@ export function CustomersPage({ userId, onViewCustomer }: CustomersPageProps) {
 
   const handleWhatsApp = (customer: Customer) => {
     const info = (customer.contact_info || '').trim();
-    if (/^[\+]?[0-9][\d\s-]*$/.test(info)) {
+    
+    // Extract phone number from contact_info (which might contain both email and phone)
+    const phoneMatch = info.match(/(\+?[\d\s-]{10,})/);
+    
+    if (phoneMatch && phoneMatch[0]) {
+      const phoneNumber = phoneMatch[0].trim();
+      
       // Format phone number for WhatsApp (remove spaces, dashes, and ensure it starts with +)
-      const formattedNumber = info.startsWith('+') ? info.replace(/[\s-]/g, '') : `+91${info.replace(/[\s-]/g, '')}`;
-      window.open(`https://wa.me/${formattedNumber}`, '_blank');
+      // Strip all non-numeric characters except the + sign at the beginning
+      const formattedNumber = phoneNumber.startsWith('+') 
+        ? phoneNumber.replace(/[^\d+]/g, '')
+        : `+91${phoneNumber.replace(/[^\d]/g, '')}`;
+      
+      // Generate a greeting message
+      const message = `Hello ${customer.name}! I'm reaching out to discuss how we can help with your needs. Would you have some time to chat?`;
+      
+      // URL encode the message
+      const encodedMessage = encodeURIComponent(message);
+      
+      // Open WhatsApp with pre-filled message
+      window.open(`https://wa.me/${formattedNumber}?text=${encodedMessage}`, '_blank');
     } else {
       alert('Invalid phone number for WhatsApp');
+    }
+  };
+  
+  const handleEmail = (customer: Customer) => {
+    const info = (customer.contact_info || '').trim();
+    
+    // Try different patterns to extract email
+    // First, try to extract a standard email pattern
+    let emailMatch = info.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i);
+    
+    // If no match, try a simpler pattern that might catch more cases
+    if (!emailMatch) {
+      emailMatch = info.match(/\S+@\S+\.\S+/i);
+    }
+    
+    if (emailMatch && emailMatch[0]) {
+      const email = emailMatch[0].trim();
+      
+      // Create email with subject and body
+      const subject = `Hello from [Your Company] - ${customer.name}`;
+      const body = `Dear ${customer.name},\n\nI hope this email finds you well.\n\nI wanted to reach out and introduce myself as your dedicated service provider. I'm here to help with any questions or needs you might have.\n\nWould you be available for a brief call this week to discuss how I can best assist you?\n\nBest regards,\n[Your Name]\n[Your Company]`;
+      
+      // URL encode subject and body
+      const encodedSubject = encodeURIComponent(subject);
+      const encodedBody = encodeURIComponent(body);
+      
+      try {
+        // Construct the mailto URL
+        const mailtoUrl = `mailto:${email}?subject=${encodedSubject}&body=${encodedBody}`;
+        
+        // Try using window.open with _blank
+        const emailWindow = window.open(mailtoUrl, '_blank');
+        
+        // If window.open failed, try location.href as fallback
+        if (!emailWindow) {
+          window.location.href = mailtoUrl;
+        }
+      } catch (error) {
+        console.error('Error opening email client:', error);
+        // As a last resort, show the email so user can copy it
+        alert(`Please email ${email} manually. Your email client could not be opened automatically.`);
+      }
+    } else {
+      alert('No email address available in the customer contact information. Please update the customer record with an email address.');
+    }
+  };
+
+  const handleSMS = (customer: Customer) => {
+    const info = (customer.contact_info || '').trim();
+    
+    // Extract phone number from contact_info (which might contain both email and phone)
+    const phoneMatch = info.match(/(\+?[\d\s-]{10,})/);
+    
+    if (phoneMatch && phoneMatch[0]) {
+      const phoneNumber = phoneMatch[0].trim();
+      
+      // Format phone number for SMS (remove spaces and dashes)
+      const formattedNumber = phoneNumber.replace(/[\s-]/g, '');
+      
+      // Create SMS message
+      const message = encodeURIComponent(`Hi ${customer.name}, this is a follow-up regarding our previous conversation. Please let me know a good time to connect. Thanks!`);
+      
+      // Open SMS
+      window.open(`sms:${formattedNumber}?body=${message}`, '_blank');
+    } else {
+      alert('Invalid phone number for SMS');
     }
   };
 
@@ -327,6 +424,20 @@ export function CustomersPage({ userId, onViewCustomer }: CustomersPageProps) {
                         onClick={() => handleWhatsApp(customer)}
                       >
                         <MessageSquare className="h-3 w-3" />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => handleEmail(customer)}
+                      >
+                        <Mail className="h-3 w-3" />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => handleSMS(customer)}
+                      >
+                        <MessageSquare className="h-3 w-3 text-gray-700" />
                       </Button>
                     </div>
                   </div>

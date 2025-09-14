@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { LoginScreen } from './components/LoginScreen';
 import { ProfileSetupScreen } from './components/ProfileSetupScreen';
+import { ProfilePage } from './components/ProfilePage';
 import { DashboardScreen } from './components/DashboardScreen';
 import { CustomersPage } from './components/CustomersPage';
 import { CustomerDetailPage } from './components/CustomerDetailPage';
@@ -11,7 +12,7 @@ import { Navigation } from './components/Navigation';
 import { apiService } from './services/api';
 
 type AppState = 'login' | 'profile-setup' | 'app';
-type AppScreen = 'dashboard' | 'customers' | 'customer-detail' | 'referrals' | 'builder' | 'analytics' | 'marketing';
+type AppScreen = 'dashboard' | 'customers' | 'customer-detail' | 'referrals' | 'builder' | 'analytics' | 'marketing' | 'profile';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('login');
@@ -21,15 +22,8 @@ export default function App() {
 
   const handleLogin = async (userId: string) => {
     console.log('Login successful for user:', userId);
-    // After login, fetch numeric profile id so that API calls using user_id:int succeed
-    try {
-      const profile = await apiService.getProfile(userId);
-      const numericId = profile?.id ? String(profile.id) : userId;
-      setCurrentUserId(numericId);
-    } catch (e) {
-      console.error('Failed to fetch profile, defaulting to userId string. Error:', e);
-      setCurrentUserId(userId);
-    }
+    // Use the original user_id string for API calls
+    setCurrentUserId(userId);
     setAppState('app');
     setCurrentScreen('dashboard');
   };
@@ -90,6 +84,8 @@ export default function App() {
         return <DashboardScreen userId={currentUserId} onNavigate={handleNavigate} />; // Using dashboard as placeholder for analytics
       case 'marketing':
         return <MarketingAssistant userId={currentUserId} />;
+      case 'profile':
+        return <ProfilePage userId={currentUserId} />;
       default:
         return <DashboardScreen userId={currentUserId} onNavigate={handleNavigate} />;
     }

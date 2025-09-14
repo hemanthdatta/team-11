@@ -6,7 +6,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import auth, customers, referrals, dashboard, social, ai_assistant, digital_presence, messaging, ai_image_generator
+from fastapi.staticfiles import StaticFiles
+from app.api import auth, customers, referrals, dashboard, social, ai_assistant, digital_presence, messaging, ai_image_generator, customer_interactions
 from app.core.security_utils import SecurityHeadersMiddleware, limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
@@ -30,6 +31,12 @@ def create_app():
         allow_headers=["*"],
     )
     
+    # Create uploads directory if it doesn't exist
+    os.makedirs("uploads/profile_images", exist_ok=True)
+    
+    # Mount static files directory for serving uploaded files
+    app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+    
     # Add rate limiter
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -44,6 +51,7 @@ def create_app():
     app.include_router(ai_image_generator.router, prefix="/ai", tags=["ai"])
     app.include_router(digital_presence.router, prefix="/digital-presence", tags=["digital-presence"])
     app.include_router(messaging.router, prefix="/messaging", tags=["messaging"])
+    app.include_router(customer_interactions.router, prefix="/interactions", tags=["interactions"])
     
     @app.get("/")
     async def root():

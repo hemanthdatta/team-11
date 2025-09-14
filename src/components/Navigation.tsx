@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from './ui/button';
-import { Home, Users, Gift, Globe, BarChart3, Sparkles } from 'lucide-react';
+import { Home, Users, Gift, Globe, BarChart3, Sparkles, User } from 'lucide-react';
 
 interface NavigationProps {
   currentScreen: string;
@@ -14,7 +14,8 @@ export function Navigation({ currentScreen, onNavigate }: NavigationProps) {
     { id: 'referrals', label: 'Referrals', icon: Gift },
     { id: 'builder', label: 'Builder', icon: Globe },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    { id: 'marketing', label: 'AI Assistant', icon: Sparkles }
+    { id: 'marketing', label: 'AI Assistant', icon: Sparkles },
+    { id: 'profile', label: 'Profile', icon: User }
   ];
 
   return (
