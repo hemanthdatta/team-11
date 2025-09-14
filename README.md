@@ -1,8 +1,6 @@
 
   # Micro-Entrepreneur Growth App
 
-  This is a code bundle for Micro-Entrepreneur Growth App. The original project is available at https://www.figma.com/design/oKVuDUQ1ePbwev4Exdjvy3/Micro-Entrepreneur-Growth-App.
-
   ## Features
 
   - Customer Management
