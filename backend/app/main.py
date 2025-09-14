@@ -26,7 +26,7 @@ def create_app():
     allowed_origins = [
         "http://localhost:3000",
         "http://localhost:3001", 
-        "https://your-frontend-domain.vercel.app",  # Update with your Vercel domain
+        "https://team-11-two.vercel.app/",  # Update with your Vercel domain
         "https://*.vercel.app",  # Allow all Vercel preview deployments
     ]
     
